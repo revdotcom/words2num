@@ -23,11 +23,4 @@ setup(
     install_requires=[
     ],
     packages=find_packages(),
-    classifiers=[
-        "Development Status :: 1 - Pre-Alpha",
-        "Intended Audience :: Data Scientists",
-        "Operating System :: OS Independent",
-        "Topic :: Natural Language Processing",
-        "Programming Language :: Python :: 3",
-    ],
 )

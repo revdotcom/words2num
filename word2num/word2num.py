@@ -63,7 +63,7 @@ SHORT_SCALE_ENGLISH = {
 LANG = {'en_us': SHORT_SCALE_ENGLISH}
 
 
-class NumberException(Exception):
+class NumberParseException(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
 
@@ -73,8 +73,8 @@ def tokenize(text, vocab):
     try:
         result = ([vocab[token] for token in tokens if token])
     except KeyError as e:
-        raise NumberException("Invalid number word: "
-                              "{0} in '{1}'".format(e, text))
+        raise NumberParseException("Invalid number word: "
+                                   "{0} in '{1}'".format(e, text))
     return result
 
 
@@ -90,11 +90,13 @@ def compute(acc, tokens):
     elif type_next in {'X'}:
         return acc * value_next + compute(0, tokens_remaining)
     else:
-        raise NumberException("Unable to process token: "
-                              "{0}({1})'".format(value_next, type_next))
+        raise NumberParseException("Unable to process token: "
+                                   "{0}({1})'".format(value_next, type_next))
 
 
 def word2num(text):
     vocab = LANG['en_us']['vocab']
     tokens = tokenize(text, vocab)
+    if not tokens:
+        raise NumberParseException("No valid tokens in {0}".format(text))
     return compute(0, tokens)

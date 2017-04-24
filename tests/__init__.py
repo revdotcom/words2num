@@ -6,6 +6,19 @@ class TestITN(unittest.TestCase):
     """Test inverse text normalization for numbers.
     """
 
+    def test_failure(self):
+        """Test error handling of word2num.
+        """
+        test_trials = ("1", "frogess", "telepromptx", "**", "-", "0", "sixes")
+
+        for trial in test_trials:
+            try:
+                word2num.word2num(trial)
+                assert False, "exception not raised for: {0}".format(trial)
+            except word2num.NumberParseException:
+                pass
+
+
     def test_en_us(self):
         """Test postives for en-US.
         """
