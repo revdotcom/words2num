@@ -1,5 +1,6 @@
 import unittest
 import random
+import sys
 from multiprocessing import Process
 from words2num import words2num, NumberParseException
 from num2words import num2words
@@ -44,6 +45,7 @@ class TestEN_US(unittest.TestCase):
                    "'{0}' -> {1} != {2}".format(trial, result, target)
 
 
+    @unittest.skipIf(sys.version_info[0] < 3, 'python2 fails at concurrency')
     def test_en_us_auto(self):
         """Test many (valid) inputs sampled from a wide range.
         Inputs are created by num2word.

@@ -1,3 +1,4 @@
+from __future__ import division, unicode_literals, print_function
 import re
 from .core import NumberParseException, placevalue
 
