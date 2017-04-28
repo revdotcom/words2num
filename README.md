@@ -1,11 +1,11 @@
-# word2num
+# words2num
 
 Inverse text normalization for numbers. Currently only supports en-US locale.
 
 ## Usage
 
-Example: `word2num("forty-two hundred and forty-two")`
+Example: `w2n("forty-two hundred and forty-two")`
 
 ## Installation
 
-`pip install word2num`
+`pip install words2num`
