@@ -1,6 +1,7 @@
 from __future__ import division, unicode_literals, print_function
 import re
 from .core import NumberParseException, placevalue
+from decimal import Decimal, localcontext
 
 
 VOCAB = {
@@ -55,7 +56,7 @@ VOCAB = {
     'octodecillion': (10**57, 'X'),
     'novemdecillion': (10**60, 'X'),
     'vigintillion': (10**63, 'X'),
-    'centillion': (10**303, 'X'),
+    'centillion': (10**303, 'X')
 }
 
 
@@ -136,11 +137,26 @@ def tokenize(text):
     try:
         # don't use generator here because we want to raise the exception
         # here now if the word is not found in vocabulary (easier debug)
-        parsed_tokens = [VOCAB[token] for token in tokens if token]
+        decimal = False
+        parsed_tokens = []
+        decimal_tokens = []
+        for token in tokens:
+            if token:
+                if token == 'point':
+                    if decimal:
+                        raise ValueError("Invalid decimal word "
+                                         "'{0}'".format(token))
+                    else:
+                        decimal = True
+                else:
+                    if decimal:
+                        decimal_tokens.append(VOCAB[token])
+                    else:
+                        parsed_tokens.append(VOCAB[token])
     except KeyError as e:
         raise ValueError("Invalid number word: "
                          "{0} in {1}".format(e, text))
-    return parsed_tokens
+    return parsed_tokens, decimal_tokens
 
 
 def compute(tokens):
@@ -169,8 +185,27 @@ def compute(tokens):
     return sum(outputs)
 
 
+def compute_decimal(tokens):
+    """Compute value of decimal tokens."""
+    with localcontext() as ctx:
+        # Locally sets decimal precision to 15 for all computations
+        ctx.prec = 15
+        total = Decimal()
+        place = -1
+        for token in tokens:
+            value, label = token
+            if label not in ('D', 'Z'):
+                raise NumberParseException("Invalid sequence after decimal "
+                                           "point")
+            else:
+                total += value * Decimal(10) ** Decimal(place)
+                place -= 1
+    return float(total) if total > 0 else 0
+
+
 def evaluate(text):
-    tokens = tokenize(text)
+    tokens, decimal_tokens = tokenize(text)
     if not tokens:
         raise ValueError("No valid tokens in {0}".format(text))
-    return compute(tokens)
+    decimal_value = compute_decimal(decimal_tokens)
+    return compute(tokens) + decimal_value
