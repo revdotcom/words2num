@@ -98,6 +98,7 @@ class FST:
             ('S', 'T'): f_add,     # 90
             ('S', 'M'): f_add,     # 19
             ('S', 'A'): f_none,    # 100
+            ('S', 'F'): f_ret,     # 0
             ('D', 'H'): f_mul_hundred,     # 900
             ('D', 'X'): f_mul,     # 9000
             ('D', 'F'): f_ret,     # 9
@@ -206,6 +207,6 @@ def compute_decimal(tokens):
 
 def evaluate(text):
     tokens, decimal_tokens = tokenize(text)
-    if not tokens:
+    if not tokens and not decimal_tokens:
         raise ValueError("No valid tokens in {0}".format(text))
     return compute(tokens) + compute_decimal(decimal_tokens)
