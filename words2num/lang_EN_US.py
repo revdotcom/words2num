@@ -208,5 +208,4 @@ def evaluate(text):
     tokens, decimal_tokens = tokenize(text)
     if not tokens:
         raise ValueError("No valid tokens in {0}".format(text))
-    decimal_value = compute_decimal(decimal_tokens)
-    return compute(tokens) + decimal_value
+    return compute(tokens) + compute_decimal(decimal_tokens)
