@@ -33,7 +33,9 @@ class TestEN_US(unittest.TestCase):
             "one billion point six four",
             "six hundred point nine nine",
             "one point zero zero four",
-            "zero point five")
+            "zero point five",
+            "four point oh",
+            "nine point oh nine")
         test_targets = (2,
             12,
             0,
@@ -54,7 +56,9 @@ class TestEN_US(unittest.TestCase):
             1000000000.64,
             600.99,
             1.004,
-            0.5)
+            0.5,
+            4.0,
+            9.09)
         tests = zip(test_trials, test_targets)
 
         for (trial, target) in tests:

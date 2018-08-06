@@ -6,6 +6,7 @@ from decimal import Decimal, localcontext
 
 VOCAB = {
     'zero': (0, 'Z'),
+    'oh': (0, 'Z'),
     'a': (None, 'A'),
     'one': (1, 'D'),
     'two': (2, 'D'),
@@ -200,7 +201,7 @@ def compute_decimal(tokens):
             else:
                 total += value * Decimal(10) ** Decimal(place)
                 place -= 1
-    return float(total) if total > 0 else 0
+    return float(total) if tokens else 0
 
 
 def evaluate(text):
