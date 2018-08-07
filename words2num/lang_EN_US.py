@@ -158,6 +158,8 @@ def tokenize(text):
     except KeyError as e:
         raise ValueError("Invalid number word: "
                          "{0} in {1}".format(e, text))
+    if decimal and not decimal_tokens:
+        raise ValueError("Invalid sequence: no tokens following 'point'")
     return parsed_tokens, decimal_tokens
 
 

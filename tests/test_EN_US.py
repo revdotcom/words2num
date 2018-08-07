@@ -112,7 +112,9 @@ class TestEN_US(unittest.TestCase):
             "one point thousand",
             "one point two point three",
             "one point point two",
-            "eleven thousand point two hundred")
+            "eleven thousand point two hundred",
+            "one point",
+            "two thousand point")
 
         for test in tests:
             try:
