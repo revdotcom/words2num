@@ -7,7 +7,7 @@ from decimal import Decimal, localcontext
 VOCAB = {
     'zero': (0, 'Z'),
     'oh': (0, 'Z'),
-    'a': (None, 'A'),
+    'a': (1, 'A'),
     'one': (1, 'D'),
     'two': (2, 'D'),
     'three': (3, 'D'),
@@ -82,13 +82,6 @@ class FST:
         def f_ret(self, _):
             return self.value
 
-        def f_none(self, _):
-            pass
-
-        def f_hundred(self, n):
-            assert n == 100
-            self.value = n
-
         self.value = 0
         self.state = 'S'
         # self.states = {'S', 'D', 'T', 'M', 'H', 'X', 'Z', 'A', 'F'}
@@ -97,7 +90,7 @@ class FST:
             ('S', 'D'): f_add,     # 9
             ('S', 'T'): f_add,     # 90
             ('S', 'M'): f_add,     # 19
-            ('S', 'A'): f_none,    # 100
+            ('S', 'A'): f_add,    # 100
             ('S', 'F'): f_ret,     # 0
             ('D', 'H'): f_mul_hundred,     # 900
             ('D', 'X'): f_mul,     # 9000
@@ -117,10 +110,10 @@ class FST:
             ('X', 'D'): f_add,     # 9009
             ('X', 'T'): f_add,     # 9090
             ('X', 'M'): f_add,     # 9019
-            ('X', 'A'): f_add,     # 9100
             ('X', 'F'): f_ret,     # 9000
             ('Z', 'F'): f_ret,     # 0
-            ('A', 'H'): f_hundred  # 100
+            ('A', 'H'): f_mul_hundred,     # 100
+            ('A', 'X'): f_mul      # 1000
         }
 
     def transition(self, token):
