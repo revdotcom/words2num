@@ -117,8 +117,6 @@ class TestEN_US(unittest.TestCase):
             "eleven thousand point two hundred",
             "one point",
             "two thousand point",
-            "hundred",
-            "thousand",
             "a five hundred",
             "a six thousand",
             "six thousand a hundred and twenty")
