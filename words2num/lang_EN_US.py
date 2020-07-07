@@ -145,6 +145,11 @@ def tokenize(text):
                         decimal = True
                 else:
                     if decimal:
+                        # If a modifier in the H or X states follows the decimal,
+                        # Then the number is an abbreviation of a large number
+                        # ie. two point three billion
+                        if VOCAB[token][1] in ('H', 'X'):
+                            parsed_tokens.append(VOCAB[token])
                         decimal_tokens.append(VOCAB[token])
                     else:
                         parsed_tokens.append(VOCAB[token])
@@ -192,8 +197,13 @@ def compute_decimal(tokens):
         for token in tokens:
             value, label = token
             if label not in ('D', 'Z'):
-                raise NumberParseException("Invalid sequence after decimal "
-                                           "point")
+                # If label is in the "Hundred" or greater categories, 
+                # multiply the decimal value by this modifier
+                if label in ('H', 'X'):
+                    total *= value
+                else:
+                    raise NumberParseException("Invalid sequence after decimal "
+                                               "point")
             else:
                 total += value * Decimal(10) ** Decimal(place)
                 place -= 1
