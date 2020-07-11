@@ -91,7 +91,7 @@ class FST:
             ('S', 'T'): f_add,     # 90
             ('S', 'M'): f_add,     # 19
             ('S', 'A'): f_add,    # 100
-            ('S', 'F'): f_ret,     # 0
+            ('S', 'F'): f_ret,     # 1
             ('D', 'H'): f_mul_hundred,     # 900
             ('D', 'X'): f_mul,     # 9000
             ('D', 'F'): f_ret,     # 9
@@ -113,7 +113,8 @@ class FST:
             ('X', 'F'): f_ret,     # 9000
             ('Z', 'F'): f_ret,     # 0
             ('A', 'H'): f_mul_hundred,     # 100
-            ('A', 'X'): f_mul      # 1000
+            ('A', 'X'): f_mul,      # 1000
+            ('A', 'F'): f_ret,      # 1
         }
 
     def transition(self, token):
@@ -127,6 +128,16 @@ class FST:
         return edge_fn(self, value)
 
 
+def compute_pvs(tokens):
+    """Compute the placevalues for each token in the list tokens"""
+    pvs = []
+    for tok in tokens:
+        try:
+            pvs.append(placevalue(VOCAB[tok][0]))
+        except KeyError:
+            pvs.append(0)
+    return pvs
+
 def tokenize(text):
     tokens = re.split(r"[\s,\-]+(?:and)?", text.lower())
     try:
@@ -135,6 +146,13 @@ def tokenize(text):
         decimal = False
         parsed_tokens = []
         decimal_tokens = []
+        mul_tokens = []
+        pvs = compute_pvs(tokens)
+        # Remove multiplier tokens from the tokens list
+        # These will be used to multiply the computed value before returning
+        while max(pvs) == pvs[-1] and len(pvs) > 1 and max(pvs) > 1:
+            mul_tokens.insert(0, VOCAB[tokens.pop()])
+            pvs.pop()
         for token in tokens:
             if token:
                 if token == 'point':
@@ -145,11 +163,6 @@ def tokenize(text):
                         decimal = True
                 else:
                     if decimal:
-                        # If a modifier in the H or X states follows the decimal,
-                        # Then the number is an abbreviation of a large number
-                        # ie. two point three billion
-                        if VOCAB[token][1] in ('H', 'X'):
-                            parsed_tokens.append(VOCAB[token])
                         decimal_tokens.append(VOCAB[token])
                     else:
                         parsed_tokens.append(VOCAB[token])
@@ -158,7 +171,7 @@ def tokenize(text):
                          "{0} in {1}".format(e, text))
     if decimal and not decimal_tokens:
         raise ValueError("Invalid sequence: no tokens following 'point'")
-    return parsed_tokens, decimal_tokens
+    return parsed_tokens, decimal_tokens, mul_tokens
 
 
 def compute(tokens):
@@ -186,6 +199,13 @@ def compute(tokens):
     # print("-> {0}".format(outputs))
     return sum(outputs)
 
+def compute_mul(tokens):
+    total = 1
+    for token in tokens:
+        value, label = token
+        total *= value
+    return total
+
 
 def compute_decimal(tokens):
     """Compute value of decimal tokens."""
@@ -197,13 +217,8 @@ def compute_decimal(tokens):
         for token in tokens:
             value, label = token
             if label not in ('D', 'Z'):
-                # If label is in the "Hundred" or greater categories, 
-                # multiply the decimal value by this modifier
-                if label in ('H', 'X'):
-                    total *= value
-                else:
-                    raise NumberParseException("Invalid sequence after decimal "
-                                               "point")
+                raise NumberParseException("Invalid sequence after decimal "
+                                           "point")
             else:
                 total += value * Decimal(10) ** Decimal(place)
                 place -= 1
@@ -211,7 +226,36 @@ def compute_decimal(tokens):
 
 
 def evaluate(text):
-    tokens, decimal_tokens = tokenize(text)
+    tokens, decimal_tokens, mul_tokens = tokenize(text)
     if not tokens and not decimal_tokens:
         raise ValueError("No valid tokens in {0}".format(text))
-    return compute(tokens) + compute_decimal(decimal_tokens)
+    return (compute(tokens) + compute_decimal(decimal_tokens)) * compute_mul(mul_tokens)
+
+
+"""
+ # Idea: Seperate the large number modifiers ('X' states) that appear
+    # at the end of the text (one point five million billion) and save these
+    # to modify the value at the end  
+
+Edge cases to consider:
+* one million billion -- Two multipliers
+    This is easy enough on its own because I can separate the multipliers during tokenization
+* one point five million billion -- two multipliers with a decimal
+    Slightly more complicated but still workable by separating multipliers
+* five thousand million four hundred -- Multiplier not at end of sequence
+    State machine can't currently handle this because it has X -> X edge.
+    The issue with X -> X is that STATE -> X (which will necessarily occur before X -> X) uses the f_mul operation, 
+    which outputs the result and sets internal value to zero. This is /sometimes/ the correct behaviour, for instance
+    when we're composing a number like "five thousand eight hundred twenty", we want to add 5000 + 820 for value calc.
+    HOWEVER: When we're following a STATE -> X transition with an X -> X transition, we want to multiply the previous STATE -> X value and ignore the output from the previous transition
+* five thousand million six thousand -- Multiplier does exist at the end (thousand is in X state)
+    This has similar problems to the above, but is more of an issue when using the method of separating multipliers
+    from the end of the text. With that approach, we'd get:
+        five thousand million six (5,000,000,006) times one thousand (1,000) = 5,000,000,006,000 (five trillion six thousand)
+    instead of the correct value of:
+        500,000,006,000 (five billion six thousand)
+
+
+
+"""
+
