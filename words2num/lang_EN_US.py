@@ -151,6 +151,12 @@ def tokenize(text):
         # Remove multiplier tokens from the tokens list
         # These will be used to multiply the computed value before returning
         while max(pvs) == pvs[-1] and len(pvs) > 1 and max(pvs) > 1:
+            # Three conditions must be met:
+            # 1: The last token in the list must have the highest placevalue of any token
+            # 2: The list of tokens must be longer than one 
+                # (to prevent extracting all tokens as mul_tokens)
+            # 3: The maximum placevalue must be greater than 1
+                # This limits our mul_tokens to "hundred" or greater
             mul_tokens.insert(0, VOCAB[tokens.pop()])
             pvs.pop()
         for token in tokens:
@@ -183,8 +189,6 @@ def compute(tokens):
     last_placevalue = None
     for token in tokens:
         out = fst.transition(token)
-        # DEBUG
-        # print("tok({0}) out({1}) val({2})".format(token, out, fst.value))
         if out:
             outputs.append(out)
             if last_placevalue and last_placevalue <= placevalue(outputs[-1]):
@@ -195,11 +199,13 @@ def compute(tokens):
     if last_placevalue and last_placevalue <= placevalue(outputs[-1]):
         raise NumberParseException("Invalid sequence "
                                    "{0}".format(outputs))
-    # DEBUG
-    # print("-> {0}".format(outputs))
     return sum(outputs)
 
 def compute_mul(tokens):
+    """
+    Determine the multiplier based on the tokens at the end of
+    a number (e.g. million from "one thousand five hundred million")
+    """
     total = 1
     for token in tokens:
         value, label = token
@@ -230,32 +236,3 @@ def evaluate(text):
     if not tokens and not decimal_tokens:
         raise ValueError("No valid tokens in {0}".format(text))
     return (compute(tokens) + compute_decimal(decimal_tokens)) * compute_mul(mul_tokens)
-
-
-"""
- # Idea: Seperate the large number modifiers ('X' states) that appear
-    # at the end of the text (one point five million billion) and save these
-    # to modify the value at the end  
-
-Edge cases to consider:
-* one million billion -- Two multipliers
-    This is easy enough on its own because I can separate the multipliers during tokenization
-* one point five million billion -- two multipliers with a decimal
-    Slightly more complicated but still workable by separating multipliers
-* five thousand million four hundred -- Multiplier not at end of sequence
-    State machine can't currently handle this because it has X -> X edge.
-    The issue with X -> X is that STATE -> X (which will necessarily occur before X -> X) uses the f_mul operation, 
-    which outputs the result and sets internal value to zero. This is /sometimes/ the correct behaviour, for instance
-    when we're composing a number like "five thousand eight hundred twenty", we want to add 5000 + 820 for value calc.
-    HOWEVER: When we're following a STATE -> X transition with an X -> X transition, we want to multiply the previous STATE -> X value and ignore the output from the previous transition
-* five thousand million six thousand -- Multiplier does exist at the end (thousand is in X state)
-    This has similar problems to the above, but is more of an issue when using the method of separating multipliers
-    from the end of the text. With that approach, we'd get:
-        five thousand million six (5,000,000,006) times one thousand (1,000) = 5,000,000,006,000 (five trillion six thousand)
-    instead of the correct value of:
-        500,000,006,000 (five billion six thousand)
-
-
-
-"""
-
