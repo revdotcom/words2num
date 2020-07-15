@@ -128,14 +128,14 @@ class FST:
         return edge_fn(self, value)
 
 
-def compute_pvs(tokens):
+def compute_placevalues(tokens):
     """Compute the placevalues for each token in the list tokens"""
     pvs = []
     for tok in tokens:
-        try:
-            pvs.append(placevalue(VOCAB[tok][0]))
-        except KeyError:
+        if tok == 'point':
             pvs.append(0)
+        else:
+            pvs.append(placevalue(VOCAB[tok][0]))
     return pvs
 
 def tokenize(text):
@@ -147,18 +147,15 @@ def tokenize(text):
         parsed_tokens = []
         decimal_tokens = []
         mul_tokens = []
-        pvs = compute_pvs(tokens)
-        # Remove multiplier tokens from the tokens list
-        # These will be used to multiply the computed value before returning
+        pvs = compute_placevalues(tokens)
+        # Loop until all trailing multiplier tokens are removed and added to mul_tokens; Loop conditions:
+        # 1: The last token in the list must have the highest placevalue of any token
+        # 2: The list of tokens must be longer than one (to prevent extracting all tokens as mul_tokens)
+        # 3: The maximum placevalue must be greater than 1 (This limits our mul_tokens to "hundred" or greater)
         while max(pvs) == pvs[-1] and len(pvs) > 1 and max(pvs) > 1:
-            # Three conditions must be met:
-            # 1: The last token in the list must have the highest placevalue of any token
-            # 2: The list of tokens must be longer than one 
-                # (to prevent extracting all tokens as mul_tokens)
-            # 3: The maximum placevalue must be greater than 1
-                # This limits our mul_tokens to "hundred" or greater
             mul_tokens.insert(0, VOCAB[tokens.pop()])
             pvs.pop()
+
         for token in tokens:
             if token:
                 if token == 'point':
@@ -201,7 +198,7 @@ def compute(tokens):
                                    "{0}".format(outputs))
     return sum(outputs)
 
-def compute_mul(tokens):
+def compute_multipliers(tokens):
     """
     Determine the multiplier based on the tokens at the end of
     a number (e.g. million from "one thousand five hundred million")
@@ -235,4 +232,4 @@ def evaluate(text):
     tokens, decimal_tokens, mul_tokens = tokenize(text)
     if not tokens and not decimal_tokens:
         raise ValueError("No valid tokens in {0}".format(text))
-    return (compute(tokens) + compute_decimal(decimal_tokens)) * compute_mul(mul_tokens)
+    return (compute(tokens) + compute_decimal(decimal_tokens)) * compute_multipliers(mul_tokens)
