@@ -37,7 +37,3 @@ dist/words2num-$(PRJ_VERSION)-py$(PYTHON_VERSION)-none-any.whl:
 
 dist/words2num-$(PRJ_VERSION).tar.gz:
 	$(PYTHON) setup.py sdist
-
-release: wheel
-	ls -l dist
-	twine upload -r pypicloud dist/*.whl
