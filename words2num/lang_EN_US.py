@@ -128,7 +128,7 @@ class FST:
         return edge_fn(self, value)
 
 
-def compute_pvs(tokens):
+def compute_placevalues(tokens):
     """Compute the placevalues for each token in the list tokens"""
     pvs = []
     for tok in tokens:
@@ -147,7 +147,7 @@ def tokenize(text):
         parsed_tokens = []
         decimal_tokens = []
         mul_tokens = []
-        pvs = compute_pvs(tokens)
+        pvs = compute_placevalues(tokens)
         # Remove multiplier tokens from the tokens list
         # These will be used to multiply the computed value before returning
         while max(pvs) == pvs[-1] and len(pvs) > 1 and max(pvs) > 1:
