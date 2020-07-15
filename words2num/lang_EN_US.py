@@ -148,10 +148,15 @@ def tokenize(text):
         decimal_tokens = []
         mul_tokens = []
         pvs = compute_placevalues(tokens)
+<<<<<<< HEAD
         # Loop until all trailing multiplier tokens are removed and added to mul_tokens; Loop conditions:
         # 1: The last token in the list must have the highest placevalue of any token
         # 2: The list of tokens must be longer than one (to prevent extracting all tokens as mul_tokens)
         # 3: The maximum placevalue must be greater than 1 (This limits our mul_tokens to "hundred" or greater)
+=======
+        # Remove multiplier tokens from the tokens list
+        # These will be used to multiply the computed value before returning
+>>>>>>> d316141bc95a58b57ad4079f738ad726c24ba890
         while max(pvs) == pvs[-1] and len(pvs) > 1 and max(pvs) > 1:
             mul_tokens.insert(0, VOCAB[tokens.pop()])
             pvs.pop()
