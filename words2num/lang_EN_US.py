@@ -91,7 +91,7 @@ class FST:
             ('S', 'T'): f_add,     # 90
             ('S', 'M'): f_add,     # 19
             ('S', 'A'): f_add,    # 100
-            ('S', 'F'): f_ret,     # 0
+            ('S', 'F'): f_ret,     # 1
             ('D', 'H'): f_mul_hundred,     # 900
             ('D', 'X'): f_mul,     # 9000
             ('D', 'F'): f_ret,     # 9
@@ -113,7 +113,8 @@ class FST:
             ('X', 'F'): f_ret,     # 9000
             ('Z', 'F'): f_ret,     # 0
             ('A', 'H'): f_mul_hundred,     # 100
-            ('A', 'X'): f_mul      # 1000
+            ('A', 'X'): f_mul,      # 1000
+            ('A', 'F'): f_ret,      # 1
         }
 
     def transition(self, token):
@@ -127,6 +128,16 @@ class FST:
         return edge_fn(self, value)
 
 
+def compute_placevalues(tokens):
+    """Compute the placevalues for each token in the list tokens"""
+    pvs = []
+    for tok in tokens:
+        if tok == 'point':
+            pvs.append(0)
+        else:
+            pvs.append(placevalue(VOCAB[tok][0]))
+    return pvs
+
 def tokenize(text):
     tokens = re.split(r"[\s,\-]+(?:and)?", text.lower())
     try:
@@ -135,6 +146,16 @@ def tokenize(text):
         decimal = False
         parsed_tokens = []
         decimal_tokens = []
+        mul_tokens = []
+        pvs = compute_placevalues(tokens)
+        # Loop until all trailing multiplier tokens are removed and added to mul_tokens; Loop conditions:
+        # 1: The last token in the list must have the highest placevalue of any token
+        # 2: The list of tokens must be longer than one (to prevent extracting all tokens as mul_tokens)
+        # 3: The maximum placevalue must be greater than 1 (This limits our mul_tokens to "hundred" or greater)
+        while max(pvs) == pvs[-1] and len(pvs) > 1 and max(pvs) > 1:
+            mul_tokens.insert(0, VOCAB[tokens.pop()])
+            pvs.pop()
+
         for token in tokens:
             if token:
                 if token == 'point':
@@ -153,7 +174,7 @@ def tokenize(text):
                          "{0} in {1}".format(e, text))
     if decimal and not decimal_tokens:
         raise ValueError("Invalid sequence: no tokens following 'point'")
-    return parsed_tokens, decimal_tokens
+    return parsed_tokens, decimal_tokens, mul_tokens
 
 
 def compute(tokens):
@@ -165,8 +186,6 @@ def compute(tokens):
     last_placevalue = None
     for token in tokens:
         out = fst.transition(token)
-        # DEBUG
-        # print("tok({0}) out({1}) val({2})".format(token, out, fst.value))
         if out:
             outputs.append(out)
             if last_placevalue and last_placevalue <= placevalue(outputs[-1]):
@@ -177,9 +196,18 @@ def compute(tokens):
     if last_placevalue and last_placevalue <= placevalue(outputs[-1]):
         raise NumberParseException("Invalid sequence "
                                    "{0}".format(outputs))
-    # DEBUG
-    # print("-> {0}".format(outputs))
     return sum(outputs)
+
+def compute_multipliers(tokens):
+    """
+    Determine the multiplier based on the tokens at the end of
+    a number (e.g. million from "one thousand five hundred million")
+    """
+    total = 1
+    for token in tokens:
+        value, label = token
+        total *= value
+    return total
 
 
 def compute_decimal(tokens):
@@ -201,7 +229,7 @@ def compute_decimal(tokens):
 
 
 def evaluate(text):
-    tokens, decimal_tokens = tokenize(text)
+    tokens, decimal_tokens, mul_tokens = tokenize(text)
     if not tokens and not decimal_tokens:
         raise ValueError("No valid tokens in {0}".format(text))
-    return compute(tokens) + compute_decimal(decimal_tokens)
+    return (compute(tokens) + compute_decimal(decimal_tokens)) * compute_multipliers(mul_tokens)
