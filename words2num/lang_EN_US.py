@@ -140,6 +140,8 @@ def compute_placevalues(tokens):
 
 def tokenize(text):
     tokens = re.split(r"[\s,\-]+(?:and)?", text.lower())
+    # Remove empty strings caused by split
+    tokens = [tok for tok in tokens if tok]
     try:
         # don't use generator here because we want to raise the exception
         # here now if the word is not found in vocabulary (easier debug)
@@ -157,18 +159,17 @@ def tokenize(text):
             pvs.pop()
 
         for token in tokens:
-            if token:
-                if token == 'point':
-                    if decimal:
-                        raise ValueError("Invalid decimal word "
-                                         "'{0}'".format(token))
-                    else:
-                        decimal = True
+            if token == 'point':
+                if decimal:
+                    raise ValueError("Invalid decimal word "
+                                        "'{0}'".format(token))
                 else:
-                    if decimal:
-                        decimal_tokens.append(VOCAB[token])
-                    else:
-                        parsed_tokens.append(VOCAB[token])
+                    decimal = True
+            else:
+                if decimal:
+                    decimal_tokens.append(VOCAB[token])
+                else:
+                    parsed_tokens.append(VOCAB[token])
     except KeyError as e:
         raise ValueError("Invalid number word: "
                          "{0} in {1}".format(e, text))
