@@ -40,7 +40,8 @@ class TestEN_US(unittest.TestCase):
             "point oh zero five",
             "a thousand and fifty four",
             "three sixty",
-            "seven eleven")
+            "seven eleven",
+            "three sixty-five")
         test_targets = (2,
             12,
             0,
@@ -68,7 +69,8 @@ class TestEN_US(unittest.TestCase):
             0.005,
             1054,
             360,
-            711
+            711,
+            365
             )
         tests = zip(test_trials, test_targets)
 
