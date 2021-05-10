@@ -38,10 +38,7 @@ class TestEN_US(unittest.TestCase):
             "nine point oh nine",
             "point eight eight",
             "point oh zero five",
-            "a thousand and fifty four",
-            "three sixty",
-            "four twelve",
-            "three sixty five")
+            "a thousand and fifty four")
         test_targets = (2,
             12,
             0,
@@ -67,10 +64,7 @@ class TestEN_US(unittest.TestCase):
             9.09,
             0.88,
             0.005,
-            1054,
-            360,
-            412,
-            365
+            1054
             )
         tests = zip(test_trials, test_targets)
 
@@ -105,7 +99,8 @@ class TestEN_US(unittest.TestCase):
         """Test invalid en-US input.
         Ensure that invalid number sequences raise NumberParseException.
         """
-        tests = ("one one",
+        tests = ("seven eleven",
+            "one one",
             "one one one",
             "one one one one",
             "one one one one one",
@@ -124,8 +119,7 @@ class TestEN_US(unittest.TestCase):
             "two thousand point",
             "a five hundred",
             "a six thousand",
-            "six thousand a hundred and twenty",
-            "nineteen twenty")
+            "six thousand a hundred and twenty")
 
         for test in tests:
             try:

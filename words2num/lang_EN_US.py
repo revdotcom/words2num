@@ -79,10 +79,6 @@ class FST:
             assert n == 100
             self.value *= n
 
-        def f_mul_hundred_and_add(self, n):
-            self.value *= 100
-            self.value += n
-
         def f_ret(self, _):
             return self.value
 
@@ -100,8 +96,6 @@ class FST:
             ('D', 'X'): f_mul,     # 9000
             ('D', 'F'): f_ret,     # 9
             ('T', 'D'): f_add,     # 99
-            ('D', 'T'): f_mul_hundred_and_add,     # 990 (nine ninety)
-            ('D', 'M'): f_mul_hundred_and_add,     # 919 (nine nineteen)
             ('T', 'H'): f_mul_hundred,
             ('T', 'X'): f_mul,     # 90000
             ('T', 'F'): f_ret,     # 90
