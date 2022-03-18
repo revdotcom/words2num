@@ -7,8 +7,9 @@ from decimal import Decimal, localcontext
 VOCAB = {
     'cero': (0, 'Z'),
     'oh': (0, 'Z'),
-    'a': (1, 'A'),
     'uno': (1, 'D'),
+    'una': (1, 'D'),
+    'un': (1, 'D'),
     'dos': (2, 'D'),
     'tres': (3, 'D'),
     'cuatro': (4, 'D'),
@@ -22,12 +23,21 @@ VOCAB = {
     'doce': (12, 'M'),
     'trece': (13, 'M'),
     'catorce': (14, 'M'),
-    'quience': (15, 'M'),
+    'quince': (15, 'M'),
     'dieciséis': (16, 'M'),
     'diecisiete': (17, 'M'),
     'dieciocho': (18, 'M'),
     'diecinueve': (19, 'M'),
     'veinte': (20, 'T'),
+    'veintiuno': (21, 'T'),
+    'veintidós': (22, 'T'),
+    'veintitrés': (23, 'T'),
+    'veinticuatro': (24, 'T'),
+    'veinticinco': (25, 'T'),
+    'veintiséis': (26, 'T'),
+    'veintisiete': (27, 'T'),
+    'veintiocho': (28, 'T'),
+    'veintinueve': (29, 'T'),
     'treinta': (30, 'T'),
     'cuarenta': (40, 'T'),
     'cincuenta': (50, 'T'),
@@ -36,8 +46,18 @@ VOCAB = {
     'ochenta': (80, 'T'),
     'noventa': (90, 'T'),
     'cien': (100, 'H'),
+    'ciento': (100, 'H'),
+    'doscientos': (200, 'H'),
+    'trescientos': (300, 'H'),
+    'cuatrocientos': (400, 'H'),
+    'quinientos': (500, 'H'),
+    'seiscientos': (600, 'H'),
+    'setecientos': (700, 'H'),
+    'ochocientos': (800, 'H'),
+    'novecientos': (900, 'H'),
     'mil': (10**3, 'X'),
     'millón': (10**6, 'X'),
+    'millones': (10**6, 'X'),
     'mil millones': (10**9, 'X'),
     'billón': (10**12, 'X'),
     'cuatrillón': (10**15, 'X'),
@@ -94,7 +114,8 @@ class FST:
             ('S', 'D'): f_add,     # 9
             ('S', 'T'): f_add,     # 90
             ('S', 'M'): f_add,     # 19
-            ('S', 'A'): f_add,    # 100
+            ('S', 'H'): f_add,    # 100
+            ('S', 'X'): f_add,    # 1000
             ('S', 'F'): f_ret,     # 1
             ('D', 'H'): f_mul_hundred,     # 900
             ('D', 'X'): f_mul,     # 9000
@@ -115,12 +136,13 @@ class FST:
             ('H', 'F'): f_ret,     # 900
             ('X', 'D'): f_add,     # 9009
             ('X', 'T'): f_add,     # 9090
+            ('X', 'H'): f_add,     # 9900
             ('X', 'M'): f_add,     # 9019
             ('X', 'F'): f_ret,     # 9000
             ('Z', 'F'): f_ret,     # 0
-            ('A', 'H'): f_mul_hundred,     # 100
-            ('A', 'X'): f_mul,      # 1000
-            ('A', 'F'): f_ret,      # 1
+#            ('A', 'H'): f_mul_hundred,     # 100
+#            ('S', 'X'): f_mul,      # 1000
+#           ('A', 'F'): f_ret,      # 1
         }
 
     def transition(self, token):
