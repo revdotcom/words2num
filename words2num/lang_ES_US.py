@@ -6,7 +6,6 @@ from decimal import Decimal, localcontext
 
 VOCAB = {
     'cero': (0, 'Z'),
-    'oh': (0, 'Z'),
     'uno': (1, 'D'),
     'una': (1, 'D'),
     'un': (1, 'D'),
@@ -58,8 +57,10 @@ VOCAB = {
     'mil': (10**3, 'X'),
     'millón': (10**6, 'X'),
     'millones': (10**6, 'X'),
-    'mil millones': (10**9, 'X'),
-    'billón': (10**12, 'X'),
+    'billón': (10**9, 'X'),
+    'billones': (10**9, 'X'),
+    'trillón': (10**12, 'X'),
+    'trillones': (10**12, 'X'),
     'cuatrillón': (10**15, 'X'),
     'quintillón': (10**18, 'X'),
     'sextillon': (10**21, 'X'),
@@ -114,19 +115,19 @@ class FST:
             ('S', 'D'): f_add,     # 9
             ('S', 'T'): f_add,     # 90
             ('S', 'M'): f_add,     # 19
+ #           ('S', 'A'): f_add,    # 100
             ('S', 'H'): f_add,    # 100
-            ('S', 'X'): f_add,    # 1000
             ('S', 'F'): f_ret,     # 1
-            ('D', 'H'): f_mul_hundred,     # 900
+#            ('D', 'H'): f_mul_hundred,     # 900
             ('D', 'X'): f_mul,     # 9000
             ('D', 'F'): f_ret,     # 9
             ('T', 'D'): f_add,     # 99
-            ('D', 'T'): f_mul_hundred_and_add,     # 990 (nine ninety)
-            ('D', 'M'): f_mul_hundred_and_add,     # 919 (nine nineteen)
-            ('T', 'H'): f_mul_hundred,
+ #           ('D', 'T'): f_mul_hundred_and_add,     # 990 (nine ninety)
+ #          ('D', 'M'): f_mul_hundred_and_add,     # 919 (nine nineteen)
+ #           ('T', 'H'): f_mul_hundred,
             ('T', 'X'): f_mul,     # 90000
             ('T', 'F'): f_ret,     # 90
-            ('M', 'H'): f_mul_hundred,
+ #           ('M', 'H'): f_mul_hundred,
             ('M', 'X'): f_mul,     # 19000
             ('M', 'F'): f_ret,     # 19
             ('H', 'D'): f_add,     # 909
@@ -136,13 +137,14 @@ class FST:
             ('H', 'F'): f_ret,     # 900
             ('X', 'D'): f_add,     # 9009
             ('X', 'T'): f_add,     # 9090
-            ('X', 'H'): f_add,     # 9900
             ('X', 'M'): f_add,     # 9019
+            ('X', 'H'): f_add,     # 9900
             ('X', 'F'): f_ret,     # 9000
             ('Z', 'F'): f_ret,     # 0
-#            ('A', 'H'): f_mul_hundred,     # 100
-#            ('S', 'X'): f_mul,      # 1000
-#           ('A', 'F'): f_ret,      # 1
+ #           ('A', 'H'): f_mul_hundred,     # 100
+ #           ('A', 'X'): f_mul,      # 1000
+            ('S', 'X'): f_add,      # 1000
+ #           ('A', 'F'): f_ret,      # 1
         }
 
     def transition(self, token):
@@ -195,6 +197,7 @@ def tokenize(text):
                     decimal = True
             else:
                 if decimal:
+                    print("lang_ES_US.py.tokenize:Token:",token)
                     decimal_tokens.append(VOCAB[token])
                 else:
                     parsed_tokens.append(VOCAB[token])
@@ -203,6 +206,7 @@ def tokenize(text):
                          "{0} in {1}".format(e, text))
     if decimal and not decimal_tokens:
         raise ValueError("Invalid sequence: no tokens following 'point'")
+    print("lang_ES_US.py.tokenize:",parsed_tokens, decimal_tokens, mul_tokens)
     return parsed_tokens, decimal_tokens, mul_tokens
 
 
@@ -254,6 +258,7 @@ def compute_decimal(tokens):
             else:
                 total += value * Decimal(10) ** Decimal(place)
                 place -= 1
+    print("lang_ES_US.py.compute_decimal:total:",total,float(total))
     return float(total) if tokens else 0
 
 
@@ -261,4 +266,6 @@ def evaluate(text):
     tokens, decimal_tokens, mul_tokens = tokenize(text)
     if not tokens and not decimal_tokens:
         raise ValueError("No valid tokens in {0}".format(text))
+    print("lang_ES_US.py.evaluate:Values:",compute(tokens),compute_decimal(decimal_tokens),compute_multipliers(mul_tokens))
+    print("lang_ES_US.py.evaluate:Computation:",(compute(tokens) + compute_decimal(decimal_tokens)) * compute_multipliers(mul_tokens))
     return (compute(tokens) + compute_decimal(decimal_tokens)) * compute_multipliers(mul_tokens)
