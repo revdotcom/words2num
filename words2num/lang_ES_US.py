@@ -197,7 +197,6 @@ def tokenize(text):
                     decimal = True
             else:
                 if decimal:
-                    print("lang_ES_US.py.tokenize:Token:",token)
                     decimal_tokens.append(VOCAB[token])
                 else:
                     parsed_tokens.append(VOCAB[token])
@@ -206,7 +205,6 @@ def tokenize(text):
                          "{0} in {1}".format(e, text))
     if decimal and not decimal_tokens:
         raise ValueError("Invalid sequence: no tokens following 'point'")
-    print("lang_ES_US.py.tokenize:",parsed_tokens, decimal_tokens, mul_tokens)
     return parsed_tokens, decimal_tokens, mul_tokens
 
 
@@ -258,7 +256,6 @@ def compute_decimal(tokens):
             else:
                 total += value * Decimal(10) ** Decimal(place)
                 place -= 1
-    print("lang_ES_US.py.compute_decimal:total:",total,float(total))
     return float(total) if tokens else 0
 
 
@@ -266,6 +263,5 @@ def evaluate(text):
     tokens, decimal_tokens, mul_tokens = tokenize(text)
     if not tokens and not decimal_tokens:
         raise ValueError("No valid tokens in {0}".format(text))
-    print("lang_ES_US.py.evaluate:Values:",compute(tokens),compute_decimal(decimal_tokens),compute_multipliers(mul_tokens))
-    print("lang_ES_US.py.evaluate:Computation:",(compute(tokens) + compute_decimal(decimal_tokens)) * compute_multipliers(mul_tokens))
+
     return (compute(tokens) + compute_decimal(decimal_tokens)) * compute_multipliers(mul_tokens)
