@@ -5,7 +5,6 @@ import re
 from .core import NumberParseException, placevalue
 
 
-
 VOCAB = {
     'cero': (0, 'Z'),
     'uno': (1, 'D'),
@@ -111,7 +110,6 @@ class FST:
 
         self.value = 0
         self.state = 'S'
-        # self.states = {'S', 'D', 'T', 'M', 'H', 'X', 'Z', 'A', 'F'}
         self.edges = {
             ('S', 'Z'): f_zero,    # 0
             ('S', 'D'): f_add,     # 9
@@ -201,7 +199,6 @@ def tokenize(text):
 
 def compute(tokens):
     """Compute the value of given tokens.
-    TODO: memoize placevalue checking at every step
     """
     fst = FST()
     outputs = []
@@ -217,6 +214,7 @@ def compute(tokens):
     if last_placevalue and last_placevalue <= placevalue(outputs[-1]):
         raise NumberParseException(f"Invalid sequence {outputs}")
     return sum(outputs)
+
 
 def compute_multipliers(tokens):
     """
