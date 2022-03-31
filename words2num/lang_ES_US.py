@@ -115,19 +115,13 @@ class FST:
             ('S', 'D'): f_add,     # 9
             ('S', 'T'): f_add,     # 90
             ('S', 'M'): f_add,     # 19
- #           ('S', 'A'): f_add,    # 100
             ('S', 'H'): f_add,    # 100
             ('S', 'F'): f_ret,     # 1
-#            ('D', 'H'): f_mul_hundred,     # 900
             ('D', 'X'): f_mul,     # 9000
             ('D', 'F'): f_ret,     # 9
             ('T', 'D'): f_add,     # 99
- #           ('D', 'T'): f_mul_hundred_and_add,     # 990 (nine ninety)
- #          ('D', 'M'): f_mul_hundred_and_add,     # 919 (nine nineteen)
- #           ('T', 'H'): f_mul_hundred,
             ('T', 'X'): f_mul,     # 90000
             ('T', 'F'): f_ret,     # 90
- #           ('M', 'H'): f_mul_hundred,
             ('M', 'X'): f_mul,     # 19000
             ('M', 'F'): f_ret,     # 19
             ('H', 'D'): f_add,     # 909
@@ -141,10 +135,7 @@ class FST:
             ('X', 'H'): f_add,     # 9900
             ('X', 'F'): f_ret,     # 9000
             ('Z', 'F'): f_ret,     # 0
- #           ('A', 'H'): f_mul_hundred,     # 100
- #           ('A', 'X'): f_mul,      # 1000
             ('S', 'X'): f_add,      # 1000
- #           ('A', 'F'): f_ret,      # 1
         }
 
     def transition(self, token):
@@ -152,8 +143,8 @@ class FST:
         try:
             edge_fn = self.edges[(self.state, label)]
         except KeyError:
-            raise NumberParseException("Invalid number state from "
-                                       "{0} to {1}".format(self.state, label))
+            raise NumberParseException(f"Invalid number state from {self.state} to {label}")
+
         self.state = label
         return edge_fn(self, value)
 
@@ -191,8 +182,7 @@ def tokenize(text):
         for token in tokens:
             if token == 'punto':
                 if decimal:
-                    raise ValueError("Invalid decimal word "
-                                        "'{0}'".format(token))
+                    raise ValueError(f"Invalid decimal word '{token}'")
                 else:
                     decimal = True
             else:
@@ -201,10 +191,9 @@ def tokenize(text):
                 else:
                     parsed_tokens.append(VOCAB[token])
     except KeyError as e:
-        raise ValueError("Invalid number word: "
-                         "{0} in {1}".format(e, text))
+        raise ValueError(f"Invalid number word: {e} in {text}")
     if decimal and not decimal_tokens:
-        raise ValueError("Invalid sequence: no tokens following 'point'")
+        raise ValueError(f"Invalid sequence: no tokens following 'point'")
     return parsed_tokens, decimal_tokens, mul_tokens
 
 
@@ -220,13 +209,11 @@ def compute(tokens):
         if out:
             outputs.append(out)
             if last_placevalue and last_placevalue <= placevalue(outputs[-1]):
-                raise NumberParseException("Invalid sequence "
-                                           "{0}".format(outputs))
+                raise NumberParseException(f"Invalid sequence {outputs}")
             last_placevalue = placevalue(outputs[-1])
     outputs.append(fst.transition((None, 'F')))
     if last_placevalue and last_placevalue <= placevalue(outputs[-1]):
-        raise NumberParseException("Invalid sequence "
-                                   "{0}".format(outputs))
+        raise NumberParseException(f"Invalid sequence {outputs}")
     return sum(outputs)
 
 def compute_multipliers(tokens):
@@ -251,8 +238,7 @@ def compute_decimal(tokens):
         for token in tokens:
             value, label = token
             if label not in ('D', 'Z'):
-                raise NumberParseException("Invalid sequence after decimal "
-                                           "point")
+                raise NumberParseException("Invalid sequence after decimal point")
             else:
                 total += value * Decimal(10) ** Decimal(place)
                 place -= 1
@@ -262,6 +248,6 @@ def compute_decimal(tokens):
 def evaluate(text):
     tokens, decimal_tokens, mul_tokens = tokenize(text)
     if not tokens and not decimal_tokens:
-        raise ValueError("No valid tokens in {0}".format(text))
+        raise ValueError(f"No valid tokens in {text}")
 
     return (compute(tokens) + compute_decimal(decimal_tokens)) * compute_multipliers(mul_tokens)
